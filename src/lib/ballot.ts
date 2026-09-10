@@ -19,6 +19,23 @@ function uniqueStrings(value: unknown, allowed?: Set<string>): string[] {
   )
 }
 
+function normalizeViewingNotes(
+  value: unknown,
+  watchedFilmIds: Set<string>,
+): Record<string, string> {
+  if (!isRecord(value)) return {}
+
+  return Object.fromEntries(
+    [...watchedFilmIds].flatMap((filmId) => {
+      const note = value[filmId]
+      if (typeof note !== 'string') return []
+
+      const cleanedNote = note.trim().slice(0, 2000)
+      return cleanedNote ? [[filmId, cleanedNote]] : []
+    }),
+  )
+}
+
 function normalizeNomination(
   value: unknown,
   watchedFilmIds: Set<string>,
@@ -52,6 +69,7 @@ export function normalizeBallot(value: unknown): Ballot {
 
   const watchedFilmIds = uniqueStrings(value.watchedFilmIds, validFilmIds)
   const watched = new Set(watchedFilmIds)
+  const viewingNotes = normalizeViewingNotes(value.viewingNotes, watched)
   const ranking = uniqueStrings(value.ranking, watched)
   const nominations = Array.isArray(value.nominations)
     ? value.nominations
@@ -62,6 +80,7 @@ export function normalizeBallot(value: unknown): Ballot {
   return {
     version: 1,
     watchedFilmIds,
+    viewingNotes,
     ranking,
     nominations,
     revealReady: value.revealReady === true,

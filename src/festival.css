@@ -377,6 +377,19 @@
   flex: 0 0 auto;
 }
 
+.screening-copy .viewing-note-preview {
+  display: -webkit-box;
+  margin-top: 8px;
+  padding-left: 8px;
+  overflow: hidden;
+  color: var(--ink);
+  border-left: 2px solid var(--yellow);
+  font-style: italic;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .screening-kicker {
   display: flex;
   flex-wrap: wrap;
@@ -499,11 +512,12 @@
 .comparison-options {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
+  align-items: stretch;
   gap: 10px;
 }
 
 .comparison-options > span {
+  align-self: center;
   color: var(--muted);
   font-family: var(--display);
   font-size: 16px;
@@ -539,6 +553,35 @@
   font-family: var(--display);
   font-size: 17px;
   line-height: 1.1;
+}
+
+.comparison-note {
+  display: grid;
+  min-height: 82px;
+  max-height: 150px;
+  gap: 5px;
+  margin: 12px 10px 0;
+  padding: 10px;
+  overflow-y: auto;
+  color: var(--ink);
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  text-align: left;
+}
+
+.comparison-note small {
+  color: var(--red-dark);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.comparison-note > span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: pre-wrap;
 }
 
 .toast {
@@ -715,12 +758,14 @@
   align-items: center;
 }
 
-.nomination-form {
+.nomination-form,
+.viewing-notes-form {
   display: grid;
   gap: 17px;
 }
 
 .nomination-form label,
+.viewing-notes-form label,
 .endpoint-form label,
 .connection-gate label {
   display: grid;
@@ -730,7 +775,8 @@
   font-weight: 800;
 }
 
-.nomination-form label > span {
+.nomination-form label > span,
+.viewing-notes-form label > span {
   color: var(--muted);
   font-weight: 500;
 }
@@ -738,6 +784,7 @@
 .nomination-form input,
 .nomination-form select,
 .nomination-form textarea,
+.viewing-notes-form textarea,
 .endpoint-form input,
 .connection-gate input {
   width: 100%;
@@ -752,6 +799,26 @@
 .nomination-form textarea {
   min-height: 94px;
   resize: vertical;
+}
+
+.viewing-notes-form textarea {
+  min-height: 160px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.viewing-notes-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viewing-notes-count {
+  margin-right: auto;
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
 
 .nomination-form .primary-button {
@@ -1818,10 +1885,6 @@
     height: 42px;
   }
 
-  .ranking-actions .icon-button:first-child {
-    display: none;
-  }
-
   .reveal-stage {
     height: 270px;
   }
@@ -1832,6 +1895,10 @@
 }
 
 @media (max-width: 360px) {
+  .ranking-actions .drag-handle {
+    display: none;
+  }
+
   .nominations-view .view-heading {
     align-items: flex-start;
     flex-direction: column;

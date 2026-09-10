@@ -154,6 +154,10 @@ describe('Google Apps Script privacy boundary', () => {
     const ryderBallot = {
       version: 1,
       watchedFilmIds: ['hope'],
+      viewingNotes: {
+        hope: '  Electric opening-night crowd.  ',
+        river: 'This unwatched film note should be removed.',
+      },
       ranking: ['hope'],
       nominations: [
         {
@@ -176,11 +180,15 @@ describe('Google Apps Script privacy boundary', () => {
     })
     expect(ryderSave.ok).toBe(true)
     expect(ryderSave.revealedBallots).toBeNull()
+    expect(ryderSave.ballot).toMatchObject({
+      viewingNotes: { hope: 'Electric opening-night crowd.' },
+    })
 
     const yashviBefore = response(api.doGet({ parameter: { token: keys.yashvi } }))
     expect(yashviBefore.partnerReady).toBe(true)
     expect(yashviBefore.revealedBallots).toBeNull()
     expect(JSON.stringify(yashviBefore)).not.toContain('Na Hong-jin')
+    expect(JSON.stringify(yashviBefore)).not.toContain('Electric opening-night crowd.')
 
     const winnerBeforeReveal = post(api, {
       action: 'saveWinner',
@@ -204,6 +212,7 @@ describe('Google Apps Script privacy boundary', () => {
       ballot: {
         version: 1,
         watchedFilmIds: [],
+        viewingNotes: {},
         ranking: [],
         nominations: [],
         revealReady: true,
@@ -212,6 +221,7 @@ describe('Google Apps Script privacy boundary', () => {
     expect(yashviSave.ok).toBe(true)
     expect(yashviSave.revealedBallots).toHaveLength(2)
     expect(JSON.stringify(yashviSave)).toContain('Na Hong-jin')
+    expect(JSON.stringify(yashviSave)).toContain('Electric opening-night crowd.')
 
     const winnerAfterReveal = post(api, {
       action: 'saveWinner',

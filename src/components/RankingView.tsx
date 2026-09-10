@@ -238,6 +238,7 @@ export function RankingView({
 
       <PlacementDialog
         placement={placement}
+        viewingNotes={ballot.viewingNotes}
         onAnswer={answerComparison}
         onClose={() => setPlacement(null)}
       />

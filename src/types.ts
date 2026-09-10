@@ -43,6 +43,7 @@ export interface Nomination {
 export interface Ballot {
   version: 1
   watchedFilmIds: string[]
+  viewingNotes: Record<string, string>
   ranking: string[]
   nominations: Nomination[]
   revealReady: boolean
@@ -85,6 +86,7 @@ export function createEmptyBallot(): Ballot {
   return {
     version: 1,
     watchedFilmIds: [],
+    viewingNotes: {},
     ranking: [],
     nominations: [],
     revealReady: false,

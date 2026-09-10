@@ -1,15 +1,18 @@
 import { X } from 'lucide-react'
 import { SCREENINGS_BY_ID } from '../data/schedule'
 import type { PlacementOutcome } from '../lib/ranking'
+import type { Ballot } from '../types'
 
 interface PlacementDialogProps {
   placement: PlacementOutcome | null
+  viewingNotes: Ballot['viewingNotes']
   onAnswer: (newFilmRanksHigher: boolean) => void
   onClose: () => void
 }
 
 export function PlacementDialog({
   placement,
+  viewingNotes,
   onAnswer,
   onClose,
 }: PlacementDialogProps) {
@@ -46,6 +49,12 @@ export function PlacementDialog({
               referrerPolicy="no-referrer"
             />
             <strong>{newFilm.title}</strong>
+            <span className="comparison-note">
+              <small>Your notes</small>
+              <span>
+                {viewingNotes[newFilm.id] || 'No viewing notes saved.'}
+              </span>
+            </span>
           </button>
           <span>or</span>
           <button type="button" onClick={() => onAnswer(false)}>
@@ -55,6 +64,12 @@ export function PlacementDialog({
               referrerPolicy="no-referrer"
             />
             <strong>{comparedFilm.title}</strong>
+            <span className="comparison-note">
+              <small>Your notes</small>
+              <span>
+                {viewingNotes[comparedFilm.id] || 'No viewing notes saved.'}
+              </span>
+            </span>
           </button>
         </div>
       </section>

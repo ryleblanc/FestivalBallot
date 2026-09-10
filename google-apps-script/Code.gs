@@ -179,6 +179,7 @@ function emptyBallot_() {
   return {
     version: 1,
     watchedFilmIds: [],
+    viewingNotes: {},
     ranking: [],
     nominations: [],
     revealReady: false,
@@ -193,6 +194,7 @@ function sanitizeBallot_(value) {
 
   const watchedFilmIds = uniqueAllowedStrings_(value.watchedFilmIds, VALID_FILM_IDS)
   const watched = new Set(watchedFilmIds)
+  const viewingNotes = sanitizeViewingNotes_(value.viewingNotes, watchedFilmIds)
   const ranking = uniqueAllowedStrings_(value.ranking, watched)
   const nominations = Array.isArray(value.nominations)
     ? value.nominations
@@ -208,11 +210,25 @@ function sanitizeBallot_(value) {
   return {
     version: 1,
     watchedFilmIds: watchedFilmIds,
+    viewingNotes: viewingNotes,
     ranking: ranking,
     nominations: nominations,
     revealReady: value.revealReady === true,
     updatedAt: new Date().toISOString(),
   }
+}
+
+function sanitizeViewingNotes_(value, watchedFilmIds) {
+  const viewingNotes = {}
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return viewingNotes
+  }
+
+  watchedFilmIds.forEach(function (filmId) {
+    const note = cleanString_(value[filmId], 2000)
+    if (note) viewingNotes[filmId] = note
+  })
+  return viewingNotes
 }
 
 function sanitizeNomination_(value, watched) {

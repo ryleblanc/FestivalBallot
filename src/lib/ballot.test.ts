@@ -6,6 +6,7 @@ describe('normalizeBallot', () => {
     expect(normalizeBallot(null)).toMatchObject({
       version: 1,
       watchedFilmIds: [],
+      viewingNotes: {},
       ranking: [],
       nominations: [],
       revealReady: false,
@@ -15,6 +16,12 @@ describe('normalizeBallot', () => {
   it('removes unknown films, duplicates, and orphaned nominations', () => {
     const ballot = normalizeBallot({
       watchedFilmIds: ['hope', 'hope', 'not-a-film', 'fjord'],
+      viewingNotes: {
+        hope: '  Great audience reaction.  ',
+        river: 'Not watched',
+        'not-a-film': 'Unknown film',
+        fjord: 42,
+      },
       ranking: ['fjord', 'unknown', 'fjord', 'hope'],
       nominations: [
         {
@@ -41,6 +48,9 @@ describe('normalizeBallot', () => {
     })
 
     expect(ballot.watchedFilmIds).toEqual(['hope', 'fjord'])
+    expect(ballot.viewingNotes).toEqual({
+      hope: 'Great audience reaction.',
+    })
     expect(ballot.ranking).toEqual(['fjord', 'hope'])
     expect(ballot.nominations.map(({ id }) => id)).toEqual(['valid'])
     expect(ballot.revealReady).toBe(true)
@@ -61,6 +71,7 @@ describe('ballot mutations', () => {
   it('removes a film and its dependent data together', () => {
     const ballot = normalizeBallot({
       watchedFilmIds: ['hope', 'fjord'],
+      viewingNotes: { hope: 'Opening-night screening' },
       ranking: ['hope', 'fjord'],
       nominations: [
         {
@@ -76,6 +87,7 @@ describe('ballot mutations', () => {
 
     expect(removeWatchedFilm(ballot, 'hope')).toMatchObject({
       watchedFilmIds: ['fjord'],
+      viewingNotes: {},
       ranking: ['fjord'],
       nominations: [],
     })

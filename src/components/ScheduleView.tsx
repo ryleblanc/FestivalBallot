@@ -5,6 +5,7 @@ import {
   Clock3,
   ExternalLink,
   MapPin,
+  Pencil,
   X,
 } from 'lucide-react'
 import { SCREENINGS, SCREENINGS_BY_ID } from '../data/schedule'
@@ -25,6 +26,7 @@ import {
 import { removeWatchedFilm, updateBallot } from '../lib/ballot'
 import type { Ballot, Screening } from '../types'
 import { PlacementDialog } from './PlacementDialog'
+import { ViewingNotesDialog } from './ViewingNotesDialog'
 
 interface ScheduleViewProps {
   ballot: Ballot
@@ -35,6 +37,11 @@ interface ScheduleViewProps {
 interface PlacedFilm {
   filmId: string
   position: number
+}
+
+interface NotesEditor {
+  filmId: string
+  mode: 'log' | 'edit'
 }
 
 const festivalDays = [...new Set(SCREENINGS.map(({ start }) => dayKey(start)))]
@@ -63,6 +70,7 @@ export function ScheduleView({
   const [selectedDay, setSelectedDay] = useState(initialFestivalDay)
   const [placement, setPlacement] = useState<PlacementOutcome | null>(null)
   const [placedFilm, setPlacedFilm] = useState<PlacedFilm | null>(null)
+  const [notesEditor, setNotesEditor] = useState<NotesEditor | null>(null)
   const dayScreenings = SCREENINGS.filter(
     ({ start }) => dayKey(start) === selectedDay,
   )
@@ -74,11 +82,12 @@ export function ScheduleView({
     if (ballot.watchedFilmIds.includes(screening.id)) {
       const hasDependentData =
         ballot.ranking.includes(screening.id) ||
+        Boolean(ballot.viewingNotes[screening.id]) ||
         ballot.nominations.some(({ filmId }) => filmId === screening.id)
       if (
         hasDependentData &&
         !window.confirm(
-          `Remove ${screening.title} from your ranking and nominations?`,
+          `Remove ${screening.title} and its ranking, notes, and nominations?`,
         )
       ) {
         return
@@ -87,13 +96,44 @@ export function ScheduleView({
       return
     }
 
+    setNotesEditor({ filmId: screening.id, mode: 'log' })
+  }
+
+  function saveViewingNotes(note: string): void {
+    if (!notesEditor) return
+
+    const screening = SCREENINGS_BY_ID.get(notesEditor.filmId)
+    if (!screening) {
+      setNotesEditor(null)
+      return
+    }
+
+    const cleanedNote = note.trim()
+    if (notesEditor.mode === 'edit') {
+      changeBallot((current) => {
+        const viewingNotes = { ...current.viewingNotes }
+        if (cleanedNote) {
+          viewingNotes[screening.id] = cleanedNote
+        } else {
+          delete viewingNotes[screening.id]
+        }
+        return updateBallot(current, { viewingNotes })
+      })
+      setNotesEditor(null)
+      return
+    }
+
     const outcome = beginPlacement(screening.id, ballot.ranking)
     changeBallot((current) =>
       updateBallot(current, {
         watchedFilmIds: [...current.watchedFilmIds, screening.id],
+        viewingNotes: cleanedNote
+          ? { ...current.viewingNotes, [screening.id]: cleanedNote }
+          : current.viewingNotes,
         ranking: outcome.done ? outcome.ranking : current.ranking,
       }),
     )
+    setNotesEditor(null)
 
     if (outcome.done) {
       setPlacedFilm({ filmId: screening.id, position: outcome.insertionIndex + 1 })
@@ -200,6 +240,11 @@ export function ScheduleView({
                   <MapPin size={14} aria-hidden="true" />
                   {screening.venue}
                 </p>
+                {watched && ballot.viewingNotes[screening.id] && (
+                  <p className="viewing-note-preview">
+                    {ballot.viewingNotes[screening.id]}
+                  </p>
+                )}
               </div>
               <div className="screening-actions">
                 <a
@@ -212,6 +257,19 @@ export function ScheduleView({
                 >
                   <ExternalLink size={17} />
                 </a>
+                {watched && (
+                  <button
+                    className="icon-button subtle"
+                    type="button"
+                    onClick={() =>
+                      setNotesEditor({ filmId: screening.id, mode: 'edit' })
+                    }
+                    title={`${ballot.viewingNotes[screening.id] ? 'Edit' : 'Add'} notes for ${screening.title}`}
+                    aria-label={`${ballot.viewingNotes[screening.id] ? 'Edit' : 'Add'} notes for ${screening.title}`}
+                  >
+                    <Pencil size={17} />
+                  </button>
+                )}
                 {screening.kind !== 'event' && (
                   <button
                     className={watched ? 'watch-button checked' : 'watch-button'}
@@ -230,9 +288,21 @@ export function ScheduleView({
 
       <PlacementDialog
         placement={placement}
+        viewingNotes={ballot.viewingNotes}
         onAnswer={answerComparison}
         onClose={() => setPlacement(null)}
       />
+
+      {notesEditor && (
+        <ViewingNotesDialog
+          key={`${notesEditor.mode}:${notesEditor.filmId}`}
+          filmId={notesEditor.filmId}
+          initialNote={ballot.viewingNotes[notesEditor.filmId] ?? ''}
+          mode={notesEditor.mode}
+          onSave={saveViewingNotes}
+          onClose={() => setNotesEditor(null)}
+        />
+      )}
 
       {completedFilm && placedFilm && (
         <div className="toast" role="status">
